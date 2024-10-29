@@ -6,6 +6,9 @@ def time_range(start_time, end_time, number_of_intervals=1, gap_between_interval
     start_time_s = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
     end_time_s = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
     
+    if end_time_s < start_time_s:
+        raise ValueError("End time is before Start time, backward time input intervals")
+    
     #Determines the number of Seconds between the end and start times
     d = (end_time_s - start_time_s).total_seconds() / number_of_intervals + gap_between_intervals_s * (1 / number_of_intervals - 1)
     

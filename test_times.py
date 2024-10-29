@@ -51,3 +51,9 @@ def test_same_time():
     
     assert expected == result
     
+def test_backward_interval():
+    large = times.time_range("2010-01-12 10:00:00", "2010-01-12 09:00:00")
+    short = times.time_range("2010-01-12 10:30:00", "2010-01-12 10:45:00")
+    with pytest.raises(ValueError, match=("End time is before Start time, backward time input intervals")):
+        times.compute_overlap_time(large,short)
+    
