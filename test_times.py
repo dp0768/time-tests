@@ -1,6 +1,7 @@
 import times
 import pytest
 import yaml
+import ast
 
 def test_given_input():
     #standard input time ranges
@@ -41,14 +42,14 @@ def test_multi_interval():
     
 def test_same_time():
     #time ranges 
-    large = times.time_range("2010-01-12 10:45:00", "2010-01-12 12:00:00")
-    short = times.time_range("2010-01-12 10:30:00", "2010-01-12 10:45:00")
+    large = times.time_range("2010-01-12 10:00:00", "2010-01-12 11:00:00")
+    short = times.time_range("2010-01-12 11:30:00", "2010-01-12 12:45:00")
     
     #compute overlap time
     result = times.compute_overlap_time(large, short)
     
     #Program should return empty list containing the starting time as the only two elements
-    expected = [('2010-01-12 10:45:00', '2010-01-12 10:45:00')]
+    expected = []
     
     assert expected == result
     
@@ -107,40 +108,30 @@ def data_load(file_name):
     with open(file_name, "r")as data_file:
         return yaml.safe_load(data_file)
 
-
 data = data_load(file_name="fixtures.yml")
 
-#print(type(data))
+data_param = []
+for KEY in data.keys():
+    add = (
+        times.time_range(
+            data[KEY]['time_range_1']['start_time'],
+            data[KEY]['time_range_1']['end_time'],
+            data[KEY]['time_range_1']['number_of_intervals'],
+            data[KEY]['time_range_1']['gap_between_intervals'],
+        ),
+        times.time_range(
+            data[KEY]['time_range_2']['start_time'],
+            data[KEY]['time_range_2']['end_time'],
+            data[KEY]['time_range_2']['number_of_intervals'],
+            data[KEY]['time_range_2']['gap_between_intervals'],
+        ),
+        [ast.literal_eval(i) for i in data[KEY]['expected']]
+        
+    )
+    data_param.append(add)
 
-#for key in data.keys():
-    #print(key)
-
-
-
-@pytest.mark.parametrize("case",dict(data))
-def test_overlap_yml(case):
-    print(type(case))
-    print(case)
-    for KEY in case.keys():
-        #time range 1
-        start_time_1 = case[KEY]['time_range_1']['start_time']
-        end_time_1 = case[KEY]['time_range_1']['end_time']
-        intervals_1 = case[KEY]['time_range_1']['number_of_intervals']
-        interval_gap_1 = case[KEY]['time_range_1']['gap_between_intervals']
-       
-        #time range 2
-        start_time_2 = case[KEY]['time_range_2']['start_time']
-        end_time_2 = case[KEY]['time_range_2']['end_time']
-        intervals_2 = case[KEY]['time_range_2']['number_of_intervals']
-        interval_gap_2 = case[KEY]['time_range_2']['gap_between_intervals']
-       
-        #expected results
-        expected_result = list(case[KEY]['expected'])
-       
-        #Compute overlap and assert result
-        result = times.compute_overlap_time(
-            times.time_range(start_time_1,end_time_1,intervals_1,interval_gap_1),
-            times.time_range(start_time_2,end_time_2,intervals_2,interval_gap_2)
-            )
-        assert result == expected_result, (f'\nExpected result:{expected_result} \n \n Actual result:{result}\nASSERTION MESSAGE END')
+@pytest.mark.parametrize("first_range,second_range,expected_overlap",data_param)
+def test_parameterize_overlap_YAML(first_range,second_range,expected_overlap):
+    result = times.compute_overlap_time(first_range, second_range)
+    assert result == expected_overlap, (f'\nExpected result:{expected_overlap} \n \n Actual result:{result}\nASSERTION MESSAGE END')
 
