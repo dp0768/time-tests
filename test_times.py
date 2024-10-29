@@ -57,3 +57,40 @@ def test_backward_interval():
     with pytest.raises(ValueError, match=expected_error):
         times.time_range("2010-01-12 10:00:00", "2010-01-12 09:00:00")
     
+############################################################################################
+
+#Pytest Parametrization#
+
+############################################################################################
+
+@pytest.mark.parametrize("first_range, second_range, expected_overlap", 
+                         [
+                         #1) test_given_input
+                         (
+                            times.time_range("2010-01-12 10:00:00", "2010-01-12 12:00:00"), #first_range
+                            times.time_range("2010-01-12 10:30:00", "2010-01-12 10:45:00", 2, 60), #second_range
+                            [('2010-01-12 10:30:00', '2010-01-12 10:37:00'), ('2010-01-12 10:38:00', '2010-01-12 10:45:00')] #expected results
+                                
+                         ),
+                         #2)test_no_overlap
+                         (
+                            times.time_range("2010-01-12 10:00:00", "2010-01-12 12:00:00"),
+                            times.time_range("2010-01-12 14:30:00", "2010-01-12 14:45:00",2,60),
+                            [] 
+                         ),
+                         #3) test_multi_interval
+                         (
+                            times.time_range("2010-01-12 10:00:00", "2010-01-12 12:00:00",2,60),
+                            times.time_range("2010-01-12 10:30:00", "2010-01-12 10:45:00",2,60),
+                            [('2010-01-12 10:30:00', '2010-01-12 10:37:00'), ('2010-01-12 10:38:00', '2010-01-12 10:45:00')]  
+                         ),
+                         #4)test_same_time
+                         (
+                            times.time_range("2010-01-12 10:45:00", "2010-01-12 12:00:00"),
+                            times.time_range("2010-01-12 10:30:00", "2010-01-12 10:45:00"),
+                            [('2010-01-12 10:45:00', '2010-01-12 10:45:00')] 
+                         )
+                         ])
+def test_parameterize_overlap(first_range,second_range,expected_overlap):
+    result = times.compute_overlap_time(first_range, second_range)
+    assert result == expected_overlap, (f'\nExpected result:{expected_overlap} \n \n Actual result:{result}\nASSERTION MESSAGE END')
